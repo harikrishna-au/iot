@@ -133,7 +133,121 @@ void loop() {
     }
     delay(20000);
 }` },
-    { id: "a3", title: "RGB web control", code: "..." },
+    { id: "a3", title: "RGB web control", code: `#include <WiFi.h>
+#include <WebServer.h>
+
+// Replace with your network credentials
+const char* ssid = "Rajkumar";
+const char* password = "KJOC2043";
+
+// Web server running on port 80
+WebServer server(80);
+
+// Pin definitions for the RGB LED
+const int redPin = 22;
+const int greenPin = 23;
+const int bluePin = 21;
+
+void checkRGB() {
+  // Turn on RED LED
+  Serial.println("RED ON");
+  digitalWrite(redPin, HIGH);
+  digitalWrite(greenPin, LOW);
+  digitalWrite(bluePin, LOW);
+  delay(2000); // Wait for 1 second
+
+  // Turn on GREEN LED
+  Serial.println("GREEN ON");
+  digitalWrite(redPin, LOW);
+  digitalWrite(greenPin, HIGH);
+  digitalWrite(bluePin, LOW);
+  delay(2000); // Wait for 1 second
+
+  // Turn on BLUE LED
+  Serial.println("BLUE ON");
+  digitalWrite(redPin, LOW);
+  digitalWrite(greenPin, LOW);
+  digitalWrite(bluePin, HIGH);
+  delay(1000); // Wait for 1 second
+
+  // Turn off all LEDs
+  Serial.println("All OFF");
+  digitalWrite(redPin, LOW);
+  digitalWrite(greenPin, LOW);
+  digitalWrite(bluePin, LOW);
+  delay(2000); // Wait for 1 second
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // Initialize the pins as output
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+
+  checkRGB();
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("Connected to WiFi");
+  Serial.println(WiFi.localIP());
+
+  // Define the routes
+  server.on("/", handleRoot);
+  server.on("/setColor", handleSetColor);
+
+  // Start the server
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
+void loop() {
+  // Handle client requests
+  server.handleClient();
+}
+
+// Root route to display the HTML color picker
+void handleRoot() {
+  String html = "<html>\
+  <head>\
+    <title>RGB Controller</title>\
+  </head>\
+  <body>\
+    <h1>RGB LED Controller</h1>\
+    <input type=\"color\" id=\"colorPicker\" value=\"#ff0000\" onchange=\"sendColor(this.value)\"/>\
+    <script>\
+      function sendColor(color) {\
+        var xhr = new XMLHttpRequest();\
+        xhr.open(\"GET\", \"/setColor?color=\" + color.substring(1), true);\
+        xhr.send();\
+      }\
+    </script>\
+  </body>\
+</html>";
+
+  server.send(200, "text/html", html);
+}
+
+// Function to handle the color change request
+void handleSetColor() {
+  String color = server.arg("color");
+  int redValue = strtol(color.substring(0, 2).c_str(), NULL, 16);
+  int greenValue = strtol(color.substring(2, 4).c_str(), NULL, 16);
+  int blueValue = strtol(color.substring(4, 6).c_str(), NULL, 16);
+
+  analogWrite(redPin, redValue);
+  analogWrite(greenPin, greenValue);
+  analogWrite(bluePin, blueValue);
+
+  server.send(200, "text/plain", "Color changed");
+}
+` },
     { id: "a4", title: "4LED WEB", code: `#include <WiFi.h>
 #include <WebServer.h>
 
